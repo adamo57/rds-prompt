@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/c-bata/go-prompt"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/ssh/terminal"
-	"os"
-	"strings"
 )
 
 var (
@@ -228,7 +229,7 @@ func connect() error {
 	case "mysql":
 		connString = fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", username, password, endpoint, dbName)
 	case "postgres":
-		connString = fmt.Sprintf("host=%s port=54320 user=%s password=%s dbname=%s sslmode=disable", endpoint, username, password, dbName)
+		connString = fmt.Sprintf("host=%s port=5432 user=%s password=%s dbname=%s sslmode=disable", endpoint, username, password, dbName)
 	}
 
 	// Connect to RDS instance to make sure connection succeeds before continuing and save the db connection.
@@ -277,7 +278,7 @@ func mysqlAdd() error {
 
 	// Loop over users and add them to the database with RDS_IAM.
 	for _, user := range uu {
-		createQuery := fmt.Sprintf("CREATE USER IF NOT EXISTS %s IDENTIFIED BY 'password';", user)
+		createQuery := fmt.Sprintf("CREATE USER IF NOT EXISTS %s IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS';", user)
 		_, err := db.Exec(createQuery)
 		if err != nil {
 			return err
